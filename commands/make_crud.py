@@ -8,6 +8,8 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Create the app."
 
+    parent_target_path = None
+
     def add_arguments(self, parser):
         parser.add_argument(
             "--create_app",
@@ -20,18 +22,22 @@ class Command(BaseCommand):
             "--app_name", type=str, help="The name of the app.", required=False
         )
 
+        parser.add_argument(
+            "--model_name", type=str, help="The name of the model.", required=False
+        )
+
     def handle(self, *args, **options):
         is_new_app = options["create_app"]
         new_app_name = options["app_name"]
+        self.parent_target_path = f"./{new_app_name}"
 
         if is_new_app:
             self.handle_app_creation(new_app_name)
         else:
-            print("Creating model")
+            print("Creating only model in existing app")
 
     def handle_app_creation(self, app_name):
-        target_path = f"./{app_name}"
-        exist_app = os.path.exists(target_path)
+        exist_app = os.path.exists(self.parent_target_path)
 
         if exist_app:
             self.remove_django_app(app_name)
@@ -44,8 +50,18 @@ class Command(BaseCommand):
         os.system(f"python manage.py startapp {app_name}")
         print(f"Created: {app_name}")
 
-        # ## upd settings.py
+        # ## upd settings.py ------
         self.update_settings(app_name)
+
+        # # Remove the files that are not needed
+        target_path = self.parent_target_path
+        paths_to_remove = [
+            "views.py",
+            "models.py",
+        ]
+        self.remove_several_files(self.parent_target_path, paths_to_remove)
+
+        # # Create the files and folders
 
     def update_settings(self, app_name: str, isCreatingApp: Optional[bool] = True):
         settings_path = "./backend/settings.py"
@@ -99,6 +115,9 @@ class Command(BaseCommand):
 
         # ## upd settings.py
         self.update_settings(app_name, isCreatingApp=False)
+
+        # ## recreate the app
+        self.create_django_app(app_name)
 
     # ####  Aux Functions ========================
     def remove_dir(self, path):
