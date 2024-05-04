@@ -161,6 +161,9 @@ class Command(BaseCommand):
 
         # ## Create the serializer file
         self.create_serializer_file(app_name, model_name)
+        
+        # ## Create the views file
+        self.create_views_file(app_name, model_name)
 
     # ##  Create the model file ----------------
     def create_model_file(self, app_name, model_name):
@@ -252,6 +255,84 @@ class Command(BaseCommand):
             
         print(f"Created file: {serializer_file}")
         
+
+    # ## Create the views file ----------------
+    def create_views_file(self, app_name, model_name):
+        views_file_name = self.calc_filename(model_name) + "_views.py"
+        views_file = f"{self.parent_target_path}/views/{views_file_name}"
+        
+        with open(views_file, "w") as f:
+            f.write("from rest_framework.response import Response\n\n")
+            f.write("# ## docs openapi\n")
+            f.write("from drf_yasg.utils import swagger_auto_schema\n")
+            f.write("from drf_yasg import openapi\n\n\n")
+            f.write(
+                "from backend.shared.views.general_view import GeneralAPIView, GeneralDetailAPIView\n"
+            )
+            f.write(
+                "from backend.shared.constants.constants import page_size_openapi, page_openapi\n"
+            )
+            f.write(
+                "from backend.shared.serializers.serializers import (\n"
+                "    BadRequestSerializerDoc,\n"
+                "    NotFoundSerializer,\n"
+                ")\n\n"
+            )
+            
+            f.write(
+                f"from {app_name}.filters.{self.calc_filename(model_name)}_filters import {model_name}Filter\n"
+            )
+            f.write(
+                f"from {app_name}.models.{self.calc_filename(model_name)}_model import {model_name}\n"
+            )
+            f.write(
+                f"from {app_name}.serializers.{self.calc_filename(model_name)}_serializers import (\n"
+                f"    {model_name + 'Serializer'},\n"
+                f"    {model_name + 'QueryDocWrapperSerializer'},\n"
+                f"    {model_name + 'ResponseSerializer'},\n"
+                f"    {model_name + 'FilterSerializer'},\n"
+                f"    {model_name + 'OptDocSerializer'},\n"
+                ")\n\n\n"
+            )
+
+
+            f.write(f"class {model_name + 'View'}(GeneralAPIView):\n")
+            f.write(f"    model = {model_name}\n")
+            f.write(f"    filter = {model_name + 'Filter'}\n\n")
+            f.write(f"    serializer = {model_name + 'Serializer'}  # model serializer\n")
+            f.write(f"    serializer2 = {model_name + 'ResponseSerializer'}  # response\n\n")
+            f.write(
+                f"    @swagger_auto_schema(\n"
+                f"        operation_description='Get All {model_name}s',\n"
+                f"        responses={{\n"
+                f"            200: openapi.Response('OK', {model_name + 'QueryDocWrapperSerializer'}),\n"
+                f"        }},\n"
+                f"        query_serializer={model_name + 'FilterSerializer'},\n"
+                f"        manual_parameters=[page_size_openapi, page_openapi],\n"
+                f"    )\n"
+            )
+            f.write(f"    def get(self, request):\n")
+            f.write(f"        return super().get(request)\n\n")
+            
+            f.write(
+                f"    @swagger_auto_schema(\n"
+                f"        operation_description='Create {model_name}',\n"
+                f"        request_body={model_name + 'Serializer'},\n"
+                f"        responses={{\n"
+                f"            201: openapi.Response('OK', {model_name + 'OptDocSerializer'}),\n"
+                f"            400: openapi.Response('Bad Request', BadRequestSerializerDoc),\n"
+                f"        }},\n"
+                f"    )\n"
+            )
+            f.write(f"    def post(self, request):\n")
+            f.write(f"        return super().post(request)\n\n\n")
+
+
+            f.write(
+                f"class {model_name + 'DetailView'}(GeneralDetailAPIView):\n"
+            )
+            f.write(f"    model = {model_name}\n")
+            f.write(f"    serializer = {model_name + 'Serializer'}\n")
 
     # ####  Aux Functions ========================
     def remove_dir(self, path):
