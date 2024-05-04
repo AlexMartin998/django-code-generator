@@ -155,9 +155,12 @@ class Command(BaseCommand):
 
         # ## Create the model file
         self.create_model_file(app_name, model_name)
-        
+
         # ## Create the filter file
         self.create_filter_file(app_name, model_name)
+
+        # ## Create the serializer file
+        self.create_serializer_file(app_name, model_name)
 
     # ##  Create the model file ----------------
     def create_model_file(self, app_name, model_name):
@@ -171,7 +174,7 @@ class Command(BaseCommand):
 
     # ## Create filter file ----------------
     def create_filter_file(self, app_name, model_name):
-        filter_file_name = self.calc_filename(model_name) + "_filter.py"
+        filter_file_name = self.calc_filename(model_name) + "_filters.py"
         filter_file = f"{self.parent_target_path}/filters/{filter_file_name}"
 
         with open(filter_file, "w") as f:
@@ -185,6 +188,70 @@ class Command(BaseCommand):
             f.write("        fields = '__all__'\n")
 
         print(f"Created file: {filter_file}")
+
+    # ## Create serializer file ----------------
+    def create_serializer_file(self, app_name, model_name):
+        serializer_file_name = self.calc_filename(model_name) + "_serializers.py"
+        serializer_file = (
+            f"{self.parent_target_path}/serializers/{serializer_file_name}"
+        )
+
+        with open(serializer_file, "w") as f:
+            f.write("from rest_framework import serializers\n\n")
+            f.write(
+                "from backend.shared.serializers.serializers import (\n"
+                "    FiltersBaseSerializer,\n"
+                "    QueryDocWrapperSerializer,\n"
+                ")\n"
+            )
+            f.write(
+                f"from {app_name}.models.{self.calc_filename(model_name)}_model import {model_name}\n\n\n"
+            )
+
+            f.write(f"# ### {model_name} Serializer - Model ===============\n")
+            f.write(
+                f"class {model_name + 'Serializer'}(serializers.ModelSerializer):\n"
+            )
+            f.write("    class Meta:\n")
+            f.write(f"        model = {model_name}\n")
+            f.write("        fields = '__all__'\n\n\n")
+
+            f.write(f"# ## Response: Get All & Get By ID\n")
+            f.write(
+                f"class {model_name + 'ResponseSerializer'}(FiltersBaseSerializer):\n"
+            )
+            f.write("    class Meta:\n")
+            f.write(f"        model = {model_name}\n")
+            f.write("        fields = '__all__'\n\n\n")
+
+            f.write(f"# ### Filter Serializer - Get All ===============\n")
+            f.write(
+                f"class {model_name + 'FilterSerializer'}(FiltersBaseSerializer):\n"
+            )
+            f.write("    class Meta:\n")
+            f.write(f"        model = {model_name}\n")
+            f.write("        fields = '__all__'\n\n\n")
+
+            f.write(f"# ### Swagger ===============\n")
+            f.write(f"# ## Response Body: Post & Put & Patch\n")
+            f.write(
+                f"class {model_name + 'OptDocSerializer'}(FiltersBaseSerializer):\n"
+            )
+            f.write("    class Meta:\n")
+            f.write(f"        model = {model_name}\n")
+            f.write("        fields = '__all__'\n\n\n")
+            
+            f.write(f"# ## Get All Response\n")
+            f.write(
+                f"class {model_name
+                + 'QueryDocWrapperSerializer'}(QueryDocWrapperSerializer):\n"
+            )
+            f.write(
+                f"    data = {model_name + 'ResponseSerializer'}(many=True, required=False)\n"
+            )
+            
+        print(f"Created file: {serializer_file}")
+        
 
     # ####  Aux Functions ========================
     def remove_dir(self, path):
