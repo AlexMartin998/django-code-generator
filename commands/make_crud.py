@@ -155,6 +155,9 @@ class Command(BaseCommand):
 
         # ## Create the model file
         self.create_model_file(app_name, model_name)
+        
+        # ## Create the filter file
+        self.create_filter_file(app_name, model_name)
 
     # ##  Create the model file ----------------
     def create_model_file(self, app_name, model_name):
@@ -165,6 +168,23 @@ class Command(BaseCommand):
                 f"from django.db import models\n\n\nclass {model_name}(models.Model):\n    pass\n"
             )
         print(f"Created file: {model_file}")
+
+    # ## Create filter file ----------------
+    def create_filter_file(self, app_name, model_name):
+        filter_file_name = self.calc_filename(model_name) + "_filter.py"
+        filter_file = f"{self.parent_target_path}/filters/{filter_file_name}"
+
+        with open(filter_file, "w") as f:
+            f.write("from backend.shared.filters.filters import BaseFilter\n")
+            f.write(
+                f"from {app_name}.models.{self.calc_filename(model_name)}_model import {model_name}\n\n\n"
+            )
+            f.write(f"class {model_name}Filter(BaseFilter):\n")
+            f.write("    class Meta:\n")
+            f.write(f"        model = {model_name}\n")
+            f.write("        fields = '__all__'\n")
+
+        print(f"Created file: {filter_file}")
 
     # ####  Aux Functions ========================
     def remove_dir(self, path):
