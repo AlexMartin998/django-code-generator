@@ -39,9 +39,11 @@ class Command(BaseCommand):
         self.model_name = model_name
 
         if is_new_app:
+            print("****** Creating new app ******")
             self.handle_app_creation(new_app_name)
         else:
-            print("Creating only model in existing app")
+            print("****** Creating only model in existing app ******")
+            self.handle_model_creation(new_app_name, model_name)
 
     def handle_app_creation(self, app_name):
         exist_app = os.path.exists(self.parent_target_path)
@@ -52,6 +54,18 @@ class Command(BaseCommand):
             return
         else:
             self.create_django_app(app_name)
+
+    def handle_model_creation(self, app_name, model_name):
+        already_exist_model = os.path.exists(
+                f"{self.parent_target_path}/models/{self.calc_filename(model_name)}_model.py"
+            )
+        if already_exist_model:
+                print(f"Model '{model_name}' already exists")
+                return
+                
+        self.create_model_file(app_name, model_name)
+        self.create_other_files(app_name, model_name)
+        self.update_main_urls_model_creation()
 
     # ####  Methods ========================
     # ##  Create the app ----------------
@@ -426,7 +440,7 @@ class Command(BaseCommand):
         main_urls_path = "./backend/urls.py"
         comment_to_find = "# ### API"
 
-        urls_line = f'    path("api/v1/{self.calc_filename(self.model_name)}/", include("{self.calc_filename(self.app_name)}.urls.{self.calc_filename(self.model_name)}_urls")),\n'
+        urls_line = f'    path("api/v1/{self.calc_filename(self.model_name)}/", include("{self.calc_filename(self.app_name)}.urls.{self.calc_filename(self.model_name)}_urls")),\n\n'
 
         with open(main_urls_path, "r") as file:
             lines = file.readlines()
@@ -449,7 +463,7 @@ class Command(BaseCommand):
             # ## Write the changes
             with open(main_urls_path, "w") as file:
                 file.writelines(lines)
-        else:
+        else: # ya no se usa
             # line to remove
             line_to_remove = urls_line
 
@@ -473,6 +487,35 @@ class Command(BaseCommand):
                 file.writelines(lines)
 
 
+
+        print(f"Updated: {main_urls_path}")
+
+    def update_main_urls_model_creation(self):
+        main_urls_path = "./backend/urls.py"
+        comment_to_find = "# ### API"
+
+        urls_line = f'    path("api/v1/{self.calc_filename(self.model_name)}/", include("{self.calc_filename(self.app_name)}.urls.{self.calc_filename(self.model_name)}_urls")),\n\n'
+
+        with open(main_urls_path, "r") as file:
+            lines = file.readlines()
+
+        # ## Add the app to the main urls.py ------
+        # search line that contains "# ### API" and save the index
+        start_index = 0
+        for i, line in enumerate(lines):
+            if comment_to_find in line:
+                start_index = i
+                break
+
+        # search for the closing bracket from the start_index
+        for i, line in enumerate(lines[start_index:], start=start_index):
+            if "]" in line:
+                lines.insert(i, urls_line)
+                break
+
+        # ## Write the changes
+        with open(main_urls_path, "w") as file:
+            file.writelines(lines)
 
         print(f"Updated: {main_urls_path}")
 
