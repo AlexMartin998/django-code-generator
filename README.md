@@ -7,7 +7,13 @@ This Django command allows you to create and delete Django applications.
 To use this command, run the following command in your terminal:
 
 ```bash
-python manage.py make_crud --create_app --app_name="your_app_name"
+
+# create new app from scratch
+python manage.py make_crud --create_app --app_name="books" --model_name="Book"
+
+# add model to an existing directory
+python manage.py make_crud --app_name="books" --model_name="Author"
+
 ```
 
 ### Arguments
