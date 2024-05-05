@@ -377,7 +377,7 @@ class Command(BaseCommand):
                 f'    @swagger_auto_schema(\n'
                 f'        operation_description="Get {model_name} by ID",\n'
                 f'        responses={{\n'
-                f'            200: openapi.Response("OK", {model_name + 'OptDocSerializer'}),\n'
+                f'            200: openapi.Response("OK", {model_name + 'ResponseSerializer'}),\n'
                 f'            404: openapi.Response("Not Found", NotFoundSerializer),\n'
                 f'        }},\n'
                 f'    )\n'
