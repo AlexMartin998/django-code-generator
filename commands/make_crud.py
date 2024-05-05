@@ -47,7 +47,9 @@ class Command(BaseCommand):
         exist_app = os.path.exists(self.parent_target_path)
 
         if exist_app:
-            self.remove_django_app(app_name)
+            # self.remove_django_app(app_name)
+            print(f"App '{app_name}' already exists")
+            return
         else:
             self.create_django_app(app_name)
 
@@ -129,12 +131,16 @@ class Command(BaseCommand):
     # ##  Remove the app ----------------
     def remove_django_app(self, app_name):
         self.remove_dir(f"./{app_name}")
+        # self.delete_all_except_folder(
+        #     path=f"./{app_name}",
+        #     folder_to_skip="migrations"
+        # )
 
         # ## upd settings.py
         self.update_settings(app_name, isCreatingApp=False)
         
         # ## upd main urls.py
-        # self.update_main_urls(isCreatingApp=False)
+        self.update_main_urls(isCreatingApp=False)
 
         # ## recreate the app
         self.create_django_app(app_name)
@@ -419,13 +425,14 @@ class Command(BaseCommand):
     def update_main_urls(self, isCreatingApp: Optional[bool] = True):
         main_urls_path = "./backend/urls.py"
         comment_to_find = "# ### API"
-        
+
+        urls_line = f'    path("api/v1/{self.calc_filename(self.model_name)}/", include("{self.calc_filename(self.app_name)}.urls.{self.calc_filename(self.model_name)}_urls")),\n'
+
         with open(main_urls_path, "r") as file:
             lines = file.readlines()
 
         if isCreatingApp:
             # ## Add the app to the main urls.py ------
-            urls_line = f'    path("api/v1/{self.calc_filename(self.model_name)}/", include("{self.calc_filename(self.app_name)}.urls.{self.calc_filename(self.model_name)}_urls")),\n'
             # search line that contains "# ### API" and save the index
             start_index = 0
             for i, line in enumerate(lines):
@@ -443,11 +450,14 @@ class Command(BaseCommand):
             with open(main_urls_path, "w") as file:
                 file.writelines(lines)
         else:
+            # line to remove
+            line_to_remove = urls_line
+
             # ## Remove the app from the main urls.py ------
             start_index = 0
             end_index = 0
             for i, line in enumerate(lines):
-                if self.calc_filename(self.model_name) in line:
+                if line_to_remove in line:
                     start_index = i
                     break
 
@@ -461,6 +471,8 @@ class Command(BaseCommand):
             # ## Write the changes
             with open(main_urls_path, "w") as file:
                 file.writelines(lines)
+
+
 
         print(f"Updated: {main_urls_path}")
 
@@ -490,3 +502,13 @@ class Command(BaseCommand):
                 i += 1  # Skip the underscore on the next iteration
             i += 1
         return name
+
+    def delete_all_except_folder(self, path, folder_to_skip):
+        for filename in os.listdir(path):
+            file_path = os.path.join(path, filename)
+            if filename == folder_to_skip and os.path.isdir(file_path):
+                continue
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
