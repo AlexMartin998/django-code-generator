@@ -8,7 +8,7 @@ To use this command, run the following command in your terminal:
 
 ```bash
 
-# create new app from scratch
+# create new django app from scratch
 python manage.py make_crud --create_app --app_name="books" --model_name="Book"
 
 # add model to an existing django application
@@ -18,9 +18,9 @@ python manage.py make_crud --app_name="books" --model_name="Author"
 
 ### Arguments
 
-`--create_app`: This argument is optional. If provided, the command will create a new Django application.
-`--app_name`: This argument is required if --create_app is provided. It specifies the name of the new Django application to create.
-`--model_name`: This argument is required. If --model_name is provided, It specifies the name of the new Model to create'
+- `--create_app`: This argument is optional. If provided, the command will create a new Django application.
+- `--app_name`: This argument is required if --create_app is provided. It specifies the name of the new Django application to create.
+- `--model_name`: This argument is required. If --model_name is provided, It specifies the name of the new Model to create'
 
 ### Functions
 
