@@ -164,6 +164,9 @@ class Command(BaseCommand):
         
         # ## Create the views file
         self.create_views_file(app_name, model_name)
+        
+        # ## Create the urls file
+        self.create_urls_file(app_name, model_name)
 
     # ##  Create the model file ----------------
     def create_model_file(self, app_name, model_name):
@@ -374,6 +377,28 @@ class Command(BaseCommand):
             f.write(f"        return super().delete(request, pk)\n")
 
         print(f"Created file: {views_file}")
+
+    # ## Create the urls file ----------------
+    def create_urls_file(self, app_name, model_name):
+        urls_file_name = self.calc_filename(model_name) + "_urls.py"
+        urls_file = f"{self.parent_target_path}/urls/{urls_file_name}"
+
+        with open(urls_file, "w") as f:
+            f.write("from django.urls import path\n\n")
+            f.write(
+                f"from {app_name}.views.{self.calc_filename(model_name)}_views import (\n"
+                f"    {model_name}View,\n"
+                f"    {model_name}DetailView,\n"
+                ")\n\n\n"
+            )
+            f.write(
+                f"urlpatterns = [\n"
+                f'    path("", {model_name}View.as_view(), name="{self.calc_filename(model_name)}"),\n'
+                f'    path("<int:pk>/", {model_name}DetailView.as_view(), name="{self.calc_filename(model_name)}-detail"),\n'
+                f"]\n"
+            )
+
+        print(f"Created file: {urls_file}")
 
 
     # ####  Aux Functions ========================
