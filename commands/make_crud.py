@@ -303,9 +303,9 @@ class Command(BaseCommand):
             f.write(f"    serializer2 = {model_name + 'ResponseSerializer'}  # response\n\n")
             f.write(
                 f"    @swagger_auto_schema(\n"
-                f"        operation_description='Get All {model_name}s',\n"
+                f'        operation_description="Get All {model_name}s",\n'
                 f"        responses={{\n"
-                f"            200: openapi.Response('OK', {model_name + 'QueryDocWrapperSerializer'}),\n"
+                f'            200: openapi.Response("OK", {model_name + 'QueryDocWrapperSerializer'}),\n'
                 f"        }},\n"
                 f"        query_serializer={model_name + 'FilterSerializer'},\n"
                 f"        manual_parameters=[page_size_openapi, page_openapi],\n"
@@ -316,11 +316,11 @@ class Command(BaseCommand):
             
             f.write(
                 f"    @swagger_auto_schema(\n"
-                f"        operation_description='Create {model_name}',\n"
+                f'        operation_description="Create {model_name}",\n'
                 f"        request_body={model_name + 'Serializer'},\n"
                 f"        responses={{\n"
-                f"            201: openapi.Response('OK', {model_name + 'OptDocSerializer'}),\n"
-                f"            400: openapi.Response('Bad Request', BadRequestSerializerDoc),\n"
+                f'            201: openapi.Response("OK", {model_name + 'OptDocSerializer'}),\n'
+                f'            400: openapi.Response("Bad Request", BadRequestSerializerDoc),\n'
                 f"        }},\n"
                 f"    )\n"
             )
@@ -331,8 +331,50 @@ class Command(BaseCommand):
             f.write(
                 f"class {model_name + 'DetailView'}(GeneralDetailAPIView):\n"
             )
-            f.write(f"    model = {model_name}\n")
-            f.write(f"    serializer = {model_name + 'Serializer'}\n")
+            f.write(f"    model = {model_name}\n\n")
+            f.write(f"    serializer = {model_name + 'Serializer'}\n") # model
+            f.write(f"    serializer2 = {model_name + 'ResponseSerializer'}\n\n") # response
+            
+            f.write(
+                f'    @swagger_auto_schema(\n'
+                f'        operation_description="Get {model_name} by ID",\n'
+                f'        responses={{\n'
+                f'            200: openapi.Response("OK", {model_name + 'OptDocSerializer'}),\n'
+                f'            404: openapi.Response("Not Found", NotFoundSerializer),\n'
+                f'        }},\n'
+                f'    )\n'
+            )
+            f.write(f"    def get(self, request, pk):\n")
+            f.write(f"        return super().get(request, pk)\n\n")
+            
+            f.write(
+                f"    @swagger_auto_schema(\n"
+                f'        operation_description="Update {model_name}",\n'
+                f"        request_body={model_name + 'Serializer'},\n"
+                f"        responses={{\n"
+                f'            200: openapi.Response("OK", {model_name + "OptDocSerializer"}),\n'
+                f'            404: openapi.Response("Not Found", NotFoundSerializer),\n'
+                f'            400: openapi.Response("Bad Request", BadRequestSerializerDoc),\n'
+                f"        }},\n"
+                f"    )\n"
+            )
+            f.write(f"    def patch(self, request, pk):\n")
+            f.write(f"        return super().patch(request, pk)\n\n")
+            
+            f.write(
+                f"    @swagger_auto_schema(\n"
+                f'        operation_description="Delete {model_name}",\n'
+                f"        responses={{\n"
+                f'            204: openapi.Response("Ok - No Content"),\n'
+                f'            404: openapi.Response("Not Found", NotFoundSerializer),\n'
+                f"        }},\n"
+                f"    )\n"
+            )
+            f.write(f"    def delete(self, request, pk):\n")
+            f.write(f"        return super().delete(request, pk)\n")
+
+        print(f"Created file: {views_file}")
+
 
     # ####  Aux Functions ========================
     def remove_dir(self, path):
