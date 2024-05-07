@@ -14,6 +14,10 @@ python manage.py make_crud --create_app --app_name="books" --model_name="Book"
 # add model to an existing django application
 python manage.py make_crud --app_name="books" --model_name="Author"
 
+
+# add only model with service & repository pattern
+python manage.py make_crud_service --app_name="books" --model_name="Comment"
+
 ```
 
 ### Arguments

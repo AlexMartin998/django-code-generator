@@ -64,6 +64,8 @@ class Command(BaseCommand):
 
         self.create_model_file(app_name, model_name)
         self.create_other_files(app_name, model_name)
+        self.create_service_file(app_name, model_name)
+        self.create_repository_file(app_name, model_name)
         self.update_main_urls_model_creation()
 
     # ####  Methods ========================
@@ -204,6 +206,12 @@ class Command(BaseCommand):
         # ## Create the urls file
         self.create_urls_file(app_name, model_name)
 
+        # ## Create the repository file
+        self.create_repository_file(app_name, model_name)
+
+        # ## Create the service file
+        self.create_service_file(app_name, model_name)
+
     # ##  Create the model file ----------------
     def create_model_file(self, app_name, model_name):
         model_file_name = self.calc_filename(model_name) + "_model.py"
@@ -302,15 +310,15 @@ class Command(BaseCommand):
         views_file = f"{self.parent_target_path}/views/{views_file_name}"
 
         with open(views_file, "w") as f:
-            f.write("from rest_framework.response import Response\n\n")
             f.write("# ## docs openapi\n")
             f.write("from drf_yasg.utils import swagger_auto_schema\n")
             f.write("from drf_yasg import openapi\n\n\n")
+
             f.write(
-                "from backend.shared.views.general_view import GeneralAPIView, GeneralDetailAPIView\n"
-            )
-            f.write(
-                "from backend.shared.constants.constants import page_size_openapi, page_openapi\n"
+                "from backend.shared.views.general_view_service import (\n"
+                "    GeneralAPIViewService,\n"
+                "    GeneralDetailAPIViewService,\n"
+                ")\n"
             )
             f.write(
                 "from backend.shared.serializers.serializers import (\n"
@@ -318,12 +326,15 @@ class Command(BaseCommand):
                 "    NotFoundSerializer,\n"
                 ")\n\n"
             )
+            f.write(
+                "from backend.shared.constants.constants import page_size_openapi, page_openapi\n"
+            )
 
             f.write(
-                f"from {app_name}.filters.{self.calc_filename(model_name)}_filters import {model_name}Filter\n"
+                f"from {app_name}.repositories.{self.calc_filename(model_name)}_repository import {model_name}Repository\n"
             )
             f.write(
-                f"from {app_name}.models.{self.calc_filename(model_name)}_model import {model_name}\n"
+                f"from {app_name}.services.{self.calc_filename(model_name)}_service import {model_name}Service\n"
             )
             f.write(
                 f"from {app_name}.serializers.{self.calc_filename(model_name)}_serializers import (\n"
@@ -335,15 +346,20 @@ class Command(BaseCommand):
                 ")\n\n\n"
             )
 
-            f.write(f"class {model_name + 'View'}(GeneralAPIView):\n")
-            f.write(f"    model = {model_name}\n")
-            f.write(f"    filter = {model_name + 'Filter'}\n\n")
+            # ## View 1 -----------------
+            f.write(f"class {model_name + 'View'}(GeneralAPIViewService):\n\n")
+            f.write(f"    # constructor: DI\n")
+            f.write(f"    def __init__(self):\n")
             f.write(
-                f"    serializer = {model_name + 'Serializer'}  # model serializer\n"
+                f"        {self.calc_filename(model_name)}_repository = {model_name}Repository()\n"
             )
             f.write(
-                f"    serializer2 = {model_name + 'ResponseSerializer'}  # response\n\n"
+                f"        {self.calc_filename(model_name)}_service = {model_name}Service({self.calc_filename(model_name)}_repository)\n"
             )
+            f.write(
+                f"        super().__init__({self.calc_filename(model_name)}_service)\n\n"
+            )
+
             f.write(
                 f"    @swagger_auto_schema(\n"
                 f'        operation_description="Get All {model_name}s",\n'
@@ -370,12 +386,21 @@ class Command(BaseCommand):
             f.write(f"    def post(self, request):\n")
             f.write(f"        return super().post(request)\n\n\n")
 
-            f.write(f"class {model_name + 'DetailView'}(GeneralDetailAPIView):\n")
-            f.write(f"    model = {model_name}\n\n")
-            f.write(f"    serializer = {model_name + 'Serializer'}\n")  # model
+            # ## View 2 -----------------
             f.write(
-                f"    serializer2 = {model_name + 'ResponseSerializer'}\n\n"
-            )  # response
+                f"class {model_name + 'DetailView'}(GeneralDetailAPIViewService):\n\n"
+            )
+            f.write(f"    # constructor: DI\n")
+            f.write(f"    def __init__(self):\n")
+            f.write(
+                f"        {self.calc_filename(model_name)}_repository = {model_name}Repository()\n"
+            )
+            f.write(
+                f"        {self.calc_filename(model_name)}_service = {model_name}Service({self.calc_filename(model_name)}_repository)\n"
+            )
+            f.write(
+                f"        super().__init__({self.calc_filename(model_name)}_service)\n\n"
+            )
 
             f.write(
                 f"    @swagger_auto_schema(\n"
@@ -520,6 +545,52 @@ class Command(BaseCommand):
             file.writelines(lines)
 
         print(f"Updated: {main_urls_path}")
+
+    # ## Create repository file ----------------
+    def create_repository_file(self, app_name, model_name):
+        repository_file_name = self.calc_filename(model_name) + "_repository.py"
+        repository_file = (
+            f"{self.parent_target_path}/repositories/{repository_file_name}"
+        )
+
+        with open(repository_file, "w") as f:
+            f.write("from typing import Type\n\n")
+            f.write(
+                "from backend.shared.repositories.base_repository import BaseRepository\n\n"
+            )
+            f.write(
+                f"from {app_name}.models.{self.calc_filename(model_name)}_model import {model_name}\n\n\n"
+            )
+            f.write(f"class {model_name + 'Repository'}(BaseRepository):\n")
+            f.write(f"    model: Type[{model_name}]\n\n")
+            f.write(f"    def __init__(self):\n")
+            f.write(f"        super().__init__({model_name})\n")
+
+    # ## Create service file ----------------
+    def create_service_file(self, app_name, model_name):
+        service_file_name = self.calc_filename(model_name) + "_service.py"
+        service_file = f"{self.parent_target_path}/services/{service_file_name}"
+
+        with open(service_file, "w") as f:
+            f.write("from backend.shared.services.base_service import BaseService\n\n")
+            f.write(
+                f"from {app_name}.repositories.{self.calc_filename(model_name)}_repository import {model_name}Repository\n"
+            )
+            f.write(
+                f"from {app_name}.filters.{self.calc_filename(model_name)}_filters import {model_name}Filter\n"
+            )
+            f.write(
+                f"from {app_name}.serializers.{self.calc_filename(model_name)}_serializers import (\n"
+                f"    {model_name + 'Serializer'},\n"
+                f"    {model_name + 'ResponseSerializer'},\n"
+                ")\n\n\n"
+            )
+            f.write(f"class {model_name + 'Service'}(BaseService):\n")
+            f.write(f"    filter = {model_name}Filter\n\n")
+            f.write(f"    serializer = {model_name + 'Serializer'}\n")
+            f.write(f"    serializer2 = {model_name + 'ResponseSerializer'}\n\n")
+            f.write(f"    def __init__(self, repository: {model_name}Repository):\n")
+            f.write(f"        super().__init__(repository)\n")
 
     # ####  Aux Functions ========================
     def remove_dir(self, path):
