@@ -285,8 +285,7 @@ class Command(BaseCommand):
             
             f.write(f"# ## Get All Response\n")
             f.write(
-                f"class {model_name
-                + 'QueryDocWrapperSerializer'}(QueryDocWrapperSerializer):\n"
+                f"class {model_name}QueryDocWrapperSerializer(QueryDocWrapperSerializer):\n"
             )
             f.write(
                 f"    data = {model_name + 'ResponseSerializer'}(many=True, required=False)\n"
@@ -343,9 +342,9 @@ class Command(BaseCommand):
                 f"    @swagger_auto_schema(\n"
                 f'        operation_description="Get All {model_name}s",\n'
                 f"        responses={{\n"
-                f'            200: openapi.Response("OK", {model_name + 'QueryDocWrapperSerializer'}),\n'
+                f'            200: openapi.Response("OK", {model_name + "QueryDocWrapperSerializer"}),\n'
                 f"        }},\n"
-                f"        query_serializer={model_name + 'FilterSerializer'},\n"
+                f'        query_serializer={model_name + "FilterSerializer"},\n'
                 f"        manual_parameters=[page_size_openapi, page_openapi],\n"
                 f"    )\n"
             )
@@ -355,9 +354,9 @@ class Command(BaseCommand):
             f.write(
                 f"    @swagger_auto_schema(\n"
                 f'        operation_description="Create {model_name}",\n'
-                f"        request_body={model_name + 'Serializer'},\n"
+                f'        request_body={model_name + "Serializer"},\n'
                 f"        responses={{\n"
-                f'            201: openapi.Response("OK", {model_name + 'OptDocSerializer'}),\n'
+                f'            201: openapi.Response("OK", {model_name + "OptDocSerializer"}),\n'
                 f'            400: openapi.Response("Bad Request", BadRequestSerializerDoc),\n'
                 f"        }},\n"
                 f"    )\n"
@@ -377,7 +376,7 @@ class Command(BaseCommand):
                 f'    @swagger_auto_schema(\n'
                 f'        operation_description="Get {model_name} by ID",\n'
                 f'        responses={{\n'
-                f'            200: openapi.Response("OK", {model_name + 'ResponseSerializer'}),\n'
+                f'            200: openapi.Response("OK", {model_name + "ResponseSerializer"}),\n'
                 f'            404: openapi.Response("Not Found", NotFoundSerializer),\n'
                 f'        }},\n'
                 f'    )\n'
