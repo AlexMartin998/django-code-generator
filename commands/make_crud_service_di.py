@@ -621,7 +621,7 @@ class Command(BaseCommand):
         new_imports = [
             f"from {app_name}.models.{self.calc_filename(model_name)}_model import {model_name}\n",
             f"from {app_name}.repositories.{self.calc_filename(model_name)}_repository import {model_name}Repository\n",
-            f"from {app_name}.services.{self.calc_filename(model_name)}_service import {model_name}Service\n",
+            f"from {app_name}.services.{self.calc_filename(model_name)}_service import {model_name}Service\n\n",
         ]
         lines.insert(last_line_index + 2, new_imports[0])
         lines.insert(last_line_index + 3, new_imports[1])
@@ -653,6 +653,7 @@ class Command(BaseCommand):
         lines.insert(last_line_index + 2, new_model)
         lines.insert(last_line_index + 3, new_repository)
         lines.insert(last_line_index + 4, new_service)
+        lines.insert(last_line_index + 5, f"\n\n")
 
         # ## Write the changes
         with open(container_file_name, "w") as file:
