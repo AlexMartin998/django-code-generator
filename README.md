@@ -18,6 +18,9 @@ python manage.py make_crud --app_name="books" --model_name="Author"
 # add only model with service & repository pattern
 python manage.py make_crud_service --app_name="books" --model_name="Comment"
 
+# add only model with service & repository pattern + di container (dependency_injector)
+python manage.py make_crud_service_di --app_name="books" --model_name="Publisher"
+
 ```
 
 ### Arguments
